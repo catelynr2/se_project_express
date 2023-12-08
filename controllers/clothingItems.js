@@ -1,4 +1,5 @@
 const ClothingItem = require("../models/clothingItem");
+const { BAD_REQUEST, NOT_FOUND, DEFAULT } = require("../utils/errors");
 
 const createItem = (req, res) => {
   console.log(req), console.log(req.body), console.log(req.user._id);
@@ -11,8 +12,8 @@ const createItem = (req, res) => {
       res.status(201).send({ data: item });
     })
     .catch((e) => {
-      console.log(e);
-      res.status(500).send({ message: "Error from createItem", e });
+      console.error(e);
+      res.status(DEFAULT).send({ message: "Error from createItem", e });
     });
 };
 
@@ -22,7 +23,7 @@ const getItems = (req, res) => {
       res.status(200).send(items);
     })
     .catch((e) => {
-      res.status(500).send({ message: "Error from getItems", e });
+      res.status(DEFAULT).send({ message: "Error from getItems", e });
     });
 };
 
@@ -36,7 +37,7 @@ const updateItem = (req, res) => {
       .orFail()
       .then((item) => res.status(200).send({ data: item }))
       .catch((e) => {
-        res.status(500).send({ message: "Error from updateItem", e });
+        res.status(DEFAULT).send({ message: "Error from updateItem", e });
       }),
   );
 };
@@ -52,7 +53,7 @@ const deleteItem = (req, res) => {
         .status(204)
         .send({})
         .catch((e) => {
-          res.status(500).send({ message: "Error from deleteItem", e });
+          res.status(DEFAULT).send({ message: "Error from deleteItem", e });
         }),
     );
 };
