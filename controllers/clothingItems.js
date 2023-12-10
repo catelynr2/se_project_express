@@ -1,8 +1,10 @@
 const ClothingItem = require("../models/clothingItem");
-const { BAD_REQUEST, NOT_FOUND, DEFAULT } = require("../utils/errors");
+const { NOT_FOUND, BAD_REQUEST, DEFAULT } = require("../utils/errors");
 
 const createItem = (req, res) => {
-  console.log(req), console.log(req.body), console.log(req.user._id);
+  console.log(req);
+  console.log(req.body);
+  console.log(req.user._id);
 
   const { name, weather, imageUrl, likes } = req.body;
 
@@ -13,7 +15,12 @@ const createItem = (req, res) => {
     })
     .catch((e) => {
       console.error(e);
-      res.status(DEFAULT).send({ message: "Error from createItem", e });
+      if (e.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid request from createItem" });
+      }
+      return res.status(DEFAULT).send({ message: "Error from createItem" });
     });
 };
 
@@ -23,24 +30,25 @@ const getItems = (req, res) => {
       res.status(200).send(items);
     })
     .catch((e) => {
-      res.status(DEFAULT).send({ message: "Error from getItems", e });
+      console.error(e);
+      res.status(DEFAULT).send({ message: "Error from getItems" });
     });
 };
 
-const updateItem = (req, res) => {
-  const { itemId } = req.params;
-  const { imageUrl } = req.body;
+// const updateItem = (req, res) => {
+//   const { itemId } = req.params;
+//   const { imageUrl } = req.body;
 
-  ClothingItem.findByIdAndUpdate(
-    itemId,
-    { $set: { imageUrl } }
-      .orFail()
-      .then((item) => res.status(200).send({ data: item }))
-      .catch((e) => {
-        res.status(DEFAULT).send({ message: "Error from updateItem", e });
-      }),
-  );
-};
+//   ClothingItem.findByIdAndUpdate(
+//     itemId,
+//     { $set: { imageUrl } }
+//       .orFail()
+//       .then((item) => res.status(200).send({ data: item }))
+//       .catch((e) => {
+//         res.status(DEFAULT).send({ message: "Error from updateItem" });
+//       }),
+//   );
+// };
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
@@ -48,19 +56,92 @@ const deleteItem = (req, res) => {
   console.log(itemId);
   ClothingItem.findByIdAndDelete(itemId)
     .orFail()
-    .then((item) =>
+    .then(() =>
       res
-        .status(204)
-        .send({})
+        .status(200)
+        .send({ message: "Item deleted" })
         .catch((e) => {
-          res.status(DEFAULT).send({ message: "Error from deleteItem", e });
+          console.error(e);
+          res.status(DEFAULT).send({ message: "Error from deleteItem" });
         }),
-    );
+    )
+    .catch((e) => {
+      console.error(e);
+      if (e.name === "DocumentNotFoundError") {
+        res.status(NOT_FOUND).send({
+          message:
+            "There is no clothing item with the requested id, or the request was sent to a non-existent address",
+        });
+      } else if (e.name === "CastError") {
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed",
+        });
+      } else {
+        res.status(DEFAULT).send({
+          message: "An error has occurred on the server",
+        });
+      }
+    });
+};
+
+const likeItem = (req, res) => {
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true },
+  )
+    .orFail()
+    .then((item) => res.send(item))
+    .catch((e) => {
+      console.error(e);
+      if (e.name === "DocumentNotFoundError") {
+        res.status(NOT_FOUND).send({
+          message:
+            "There is no clothing item with the requested id, or the request was sent to a non-existent address",
+        });
+      } else if (e.name === "CastError") {
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed",
+        });
+      } else {
+        res.status(DEFAULT).send({
+          message: "An error has occurred on the server",
+        });
+      }
+    });
+};
+
+const dislikeItem = (req, res) => {
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    { $pull: { likes: req.user._id } },
+    { new: true },
+  )
+    .orFail()
+    .then((item) => res.send(item))
+    .catch((e) => {
+      console.error(e);
+      if (e.name === "DocumentNotFoundError") {
+        res.status(NOT_FOUND).send({
+          message:
+            "There is no clothing item with the requested id, or the request was sent to a non-existent address",
+        });
+      } else if (e.name === "CastError") {
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed",
+        });
+      } else {
+        res.status(DEFAULT).send({
+          message: "An error has occurred on the server",
+        });
+      }
+    });
 };
 
 module.exports = {
   createItem,
   getItems,
-  updateItem,
   deleteItem,
+  likeItem,
+  dislikeItem,
 };
