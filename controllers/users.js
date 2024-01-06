@@ -29,12 +29,16 @@ const createUser = (req, res, next) => {
     // })
     .catch((e) => {
       if (e.name === "ValidationError") {
-        next(new BAD_REQUEST(e.message));
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed.",
+        });
         // return res
         // .status(BAD_REQUEST)
         // .send({ message: "Invalid request from createUser" });
       } else if (e.code === 11000) {
-        next(new DUPLICATE("Email already exists."));
+        res.status(DUPLICATE).send({
+          message: "Email already exists.",
+        });
       } else {
         next(e);
       }
@@ -54,7 +58,9 @@ const loginUser = (req, res, next) => {
     })
     .catch((e) => {
       if (e.message === "Incorrect email or password") {
-        next(new UNAUTHORIZED("Incorrect email address or password."));
+        res.status(UNAUTHORIZED).send({
+          message: "Incorrect email address or password.",
+        });
       } else {
         next(e);
       }
@@ -70,13 +76,14 @@ const getCurrentUser = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
-        next(
-          new NOT_FOUND(
-            "There is no user with the requested id, or the request was sent to a non-existent address",
-          ),
-        );
+        res.status(NOT_FOUND).send({
+          message:
+            "There is no user with the requested id, or the request was sent to a non-existent address.",
+        });
       } else if (e.name === "CastError") {
-        next(new BAD_REQUEST("Invalid ID passed."));
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed.",
+        });
       } else {
         next(e);
       }
@@ -96,59 +103,23 @@ const updateUser = (req, res, next) => {
     .then((userInfo) => res.send({ data: userInfo }))
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
-        next(
-          new NOT_FOUND(
-            "There is no user with the requested id, or the request was sent to a non-existent address",
-          ),
-        );
+        res.status(NOT_FOUND).send({
+          message:
+            "There is no user with the requested id, or the request was sent to a non-existent address.",
+        });
       } else if (e.name === "CastError") {
-        next(new BAD_REQUEST("Invalid ID passed."));
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed.",
+        });
       } else if (e.name === "ValidationError") {
-        next(new BAD_REQUEST("You must enter a valid URL."));
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed.",
+        });
       } else {
         next(e);
       }
     });
 };
-
-// const getUsers = (req, res) => {
-//   User.find(req.params.id)
-//     .then((users) => {
-//       res.status(200).send(users);
-//     })
-//     .catch((e) => {
-//       console.error(e);
-//       res.status(DEFAULT).send({ message: "Error from getUsers" });
-//     });
-// };
-
-// const getUser = (req, res) => {
-//   User.findById(req.params.userId)
-//     .orFail()
-//     .then((user) => {
-//       res.status(200).send(user);
-//     })
-//     // .catch((e) => {
-//     //   res.status(DEFAULT).send({ message: "Error from getUser" });
-//     // });
-//     .catch((e) => {
-//       console.error(e);
-//       if (e.name === "DocumentNotFoundError") {
-//         res.status(NOT_FOUND).send({
-//           message:
-//             "There is no user with the requested id, or the request was sent to a non-existent address",
-//         });
-//       } else if (e.name === "CastError") {
-//         res.status(BAD_REQUEST).send({
-//           message: "Invalid ID passed",
-//         });
-//       } else {
-//         res.status(DEFAULT).send({
-//           message: "An error has occurred on the server",
-//         });
-//       }
-//     });
-// };
 
 module.exports = {
   createUser,

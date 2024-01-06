@@ -62,7 +62,9 @@ const deleteItem = (req, res, next) => {
     .orFail()
     .then((item) => {
       if (String(item.owner) !== req.user._id) {
-        throw new FORBIDDEN("You are not authorized to delete this item.");
+        res.status(FORBIDDEN).send({
+          message: "You are not authorized to delete this item.",
+        });
       }
       return item
         .deleteOne()
@@ -71,13 +73,14 @@ const deleteItem = (req, res, next) => {
 
     .catch((e) => {
       if (e.name === "CastError") {
-        next(new BAD_REQUEST("Invalid ID passed"));
+        res.status(BAD_REQUEST).send({
+          message: "Invalid ID passed",
+        });
       } else if (e.name === "DocumentNotFoundError") {
-        next(
-          new NOT_FOUND(
+        res.status(NOT_FOUND).send({
+          message:
             "There is no clothing item with the requested id, or the request was sent to a non-existent address",
-          ),
-        );
+        });
       } else {
         next(e);
       }
