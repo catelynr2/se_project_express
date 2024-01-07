@@ -55,14 +55,14 @@ const getItems = (req, res) => {
 //   );
 // };
 
-const deleteItem = (req, res, next) => {
+const deleteItem = (req, res) => {
   const { itemId } = req.params;
 
   ClothingItem.findById(itemId)
     .orFail()
     .then((item) => {
       if (String(item.owner) !== req.user._id) {
-        res.status(FORBIDDEN).send({
+        return res.status(FORBIDDEN).send({
           message: "You are not authorized to delete this item.",
         });
       }
@@ -82,7 +82,9 @@ const deleteItem = (req, res, next) => {
             "There is no clothing item with the requested id, or the request was sent to a non-existent address",
         });
       } else {
-        next(e);
+        res.status(DEFAULT).send({
+          message: "An error has occurred on the server",
+        });
       }
     });
 };

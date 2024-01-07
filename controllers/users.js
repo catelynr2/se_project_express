@@ -10,7 +10,7 @@ const {
   UNAUTHORIZED,
 } = require("../utils/errors");
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
   bcrypt
@@ -39,14 +39,12 @@ const createUser = (req, res, next) => {
         res.status(DUPLICATE).send({
           message: "Email already exists.",
         });
-      } else {
-        next(e);
       }
       return res.status(DEFAULT).send({ message: "Error from createUser" });
     });
 };
 
-const loginUser = (req, res, next) => {
+const loginUser = (req, res) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -61,14 +59,12 @@ const loginUser = (req, res, next) => {
         res.status(UNAUTHORIZED).send({
           message: "Incorrect email address or password.",
         });
-      } else {
-        next(e);
       }
       return res.status(DEFAULT).send({ message: "Error from loginUser" });
     });
 };
 
-const getCurrentUser = (req, res, next) => {
+const getCurrentUser = (req, res) => {
   const userId = req.user._id;
 
   User.findById(userId)
@@ -85,12 +81,14 @@ const getCurrentUser = (req, res, next) => {
           message: "Invalid ID passed.",
         });
       } else {
-        next(e);
+        res.status(DEFAULT).send({
+          message: "An error has occurred on the server",
+        });
       }
     });
 };
 
-const updateUser = (req, res, next) => {
+const updateUser = (req, res) => {
   const { name, avatar } = req.body;
   const userId = req.user._id;
 
@@ -116,7 +114,9 @@ const updateUser = (req, res, next) => {
           message: "Invalid ID passed.",
         });
       } else {
-        next(e);
+        res.status(DEFAULT).send({
+          message: "An error has occurred on the server",
+        });
       }
     });
 };
