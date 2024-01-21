@@ -39,8 +39,9 @@ const createUser = (req, res) => {
         res.status(DUPLICATE).send({
           message: "Email already exists.",
         });
+      } else {
+        return res.status(DEFAULT).send({ message: "Error from createUser" });
       }
-      return res.status(DEFAULT).send({ message: "Error from createUser" });
     });
 };
 
@@ -60,6 +61,7 @@ const loginUser = (req, res) => {
           message: "Incorrect email address or password.",
         });
       }
+      console.log(e);
       return res.status(DEFAULT).send({ message: "Error from loginUser" });
     });
 };
