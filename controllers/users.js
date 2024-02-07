@@ -2,15 +2,12 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
-const {
-  NOT_FOUND,
-  BAD_REQUEST,
-  DEFAULT,
-  DUPLICATE,
-  UNAUTHORIZED,
-} = require("../utils/errors");
+const DuplicateError = require("../utils/errors/DuplicateError");
+const BadRequestError = require("../utils/errors/BadRequestError");
+const NotFoundError = require("../utils/errors/NotFoundError");
+const UnauthorizedError = require("../utils/errors/UnauthorizedError");
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   bcrypt
@@ -23,29 +20,18 @@ const createUser = (req, res) => {
         email: newUser.email,
       });
     })
-    // User.create({ name, avatar, email, password })
-    //  .then((user) => {
-    //   res.send(user);
-    // })
     .catch((e) => {
       if (e.name === "ValidationError") {
-        res.status(BAD_REQUEST).send({
-          message: "Invalid ID passed.",
-        });
-        // return res
-        // .status(BAD_REQUEST)
-        // .send({ message: "Invalid request from createUser" });
+        next(new BadRequestError(e.message));
       } else if (e.code === 11000) {
-        res.status(DUPLICATE).send({
-          message: "Email already exists.",
-        });
+        next(new DuplicateError(e.message));
       } else {
-        return res.status(DEFAULT).send({ message: "Error from createUser" });
+        next(e);
       }
     });
 };
 
-const loginUser = (req, res) => {
+const loginUser = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -57,16 +43,14 @@ const loginUser = (req, res) => {
     })
     .catch((e) => {
       if (e.message === "Incorrect email or password") {
-        res.status(UNAUTHORIZED).send({
-          message: "Incorrect email address or password.",
-        });
+        next(new UnauthorizedError(e.message));
+      } else {
+        next(e);
       }
-      console.log(e);
-      return res.status(DEFAULT).send({ message: "Error from loginUser" });
     });
 };
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   const userId = req.user._id;
 
   User.findById(userId)
@@ -74,23 +58,16 @@ const getCurrentUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND).send({
-          message:
-            "There is no user with the requested id, or the request was sent to a non-existent address.",
-        });
+        next(new NotFoundError(e.message));
       } else if (e.name === "CastError") {
-        res.status(BAD_REQUEST).send({
-          message: "Invalid ID passed.",
-        });
+        next(new BadRequestError(e.message));
       } else {
-        res.status(DEFAULT).send({
-          message: "An error has occurred on the server",
-        });
+        next(e);
       }
     });
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, avatar } = req.body;
   const userId = req.user._id;
 
@@ -103,30 +80,19 @@ const updateUser = (req, res) => {
     .then((userInfo) => res.send({ data: userInfo }))
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND).send({
-          message:
-            "There is no user with the requested id, or the request was sent to a non-existent address.",
-        });
+        next(new NotFoundError(e.message));
       } else if (e.name === "CastError") {
-        res.status(BAD_REQUEST).send({
-          message: "Invalid ID passed.",
-        });
+        next(new BadRequestError(e.message));
       } else if (e.name === "ValidationError") {
-        res.status(BAD_REQUEST).send({
-          message: "Invalid ID passed.",
-        });
+        next(new BadRequestError(e.message));
       } else {
-        res.status(DEFAULT).send({
-          message: "An error has occurred on the server",
-        });
+        next(e);
       }
     });
 };
 
 module.exports = {
   createUser,
-  // getUsers,
-  // getUser,
   loginUser,
   getCurrentUser,
   updateUser,
