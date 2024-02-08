@@ -36,7 +36,7 @@ const deleteItem = (req, res, next) => {
     .orFail()
     .then((item) => {
       if (String(item.owner) !== req.user._id) {
-        throw new ForbiddenError(e.message);
+        throw new ForbiddenError("Forbidden Error");
       }
       return item
         .deleteOne()

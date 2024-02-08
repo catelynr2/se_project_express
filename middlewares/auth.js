@@ -1,31 +1,30 @@
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../utils/config");
-const { UNAUTHORIZED } = require("../utils/errors");
+const UnauthorizedError = require("../utils/errors/UnauthorizedError");
 
-const authMiddleware = (req, res, next) => {
+module.exports = (req, res, next) => {
   // Get the token from the Authorization header
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
     // If the token is not provided or doesn't start with 'Bearer ', return a 401 error
-    return res.status(UNAUTHORIZED).json({ message: "Unauthorized" });
+    return next(new UnauthorizedError("Unauthorized"));
   }
 
   // Extract the token from the Authorization header
   const token = authorization.replace("Bearer ", "");
+  let payload;
 
   try {
-    // Verify the token (removed 'await' here)
-    const payload = jwt.verify(token, JWT_SECRET);
-
     // Add the token payload to the user object
-    req.user = payload;
-
-    return next(); // Call next to move to the next middleware or route handler
-  } catch (e) {
-    // If there's an issue with the token (e.g., expired or invalid), return a 401 error
-    return res.status(UNAUTHORIZED).json({ message: "Unauthorized" });
+    payload = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    return next(
+      new UnauthorizedError("An error occurred while parsing the payload"),
+    );
   }
-};
 
-module.exports = authMiddleware;
+  req.user = payload; // adding the payload to the Request object
+
+  return next(); // passing the request further along
+};
