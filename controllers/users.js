@@ -42,7 +42,7 @@ const loginUser = (req, res, next) => {
       res.send({ token });
     })
     .catch((e) => {
-      if (e.message === "Username or Password are Incorrect") {
+      if (e.message === "Username or password are incorrect") {
         next(new UnauthorizedError(e.message));
       } else {
         next(e);

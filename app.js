@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 
 const cors = require("cors");
 
+require("dotenv").config();
+
 const { errors } = require("celebrate");
 
 const errorHandler = require("./middlewares/errorHandler");
