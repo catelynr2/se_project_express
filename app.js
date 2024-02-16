@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 
 const cors = require("cors");
 
+const cookieParser = require("cookie-parser");
+
 require("dotenv").config();
 
 const { errors } = require("celebrate");
@@ -12,10 +14,12 @@ const errorHandler = require("./middlewares/errorHandler");
 
 const { requestLogger, errorLogger } = require("./middlewares/logger");
 
+const routes = require("./routes");
+
 const { PORT = 3001 } = process.env;
 const app = express();
 
-app.use(cors());
+app.use(cookieParser());
 
 mongoose.connect(
   "mongodb://127.0.0.1:27017/wtwr_db",
@@ -25,9 +29,9 @@ mongoose.connect(
   (e) => console.log("DB Error", e),
 );
 
-const routes = require("./routes");
-
 app.use(express.json());
+app.use(cors());
+
 app.use(requestLogger);
 
 app.get("/crash-test", () => {
